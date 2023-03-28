@@ -35,16 +35,30 @@ const calcChecker = (props: any, propName: string, componentName: string) => {
     if (propName === "oper") {
         if (props[propName] !== "+" && props[propName] !== "*") {
             return new Error(`${propName} 속성의 값은 
-                반드시 '+', '*'만 허용합니다(at ${componentName})
+                반드시 '+', '*'만 허용합니다.(at ${componentName})
+            `);
+        }
+    }
+    if (propName === "y") {
+        const y = props[propName];
+        if (y < 100 || y > 0 || y % 2 !== 0) {
+            return new Error(`${propName} 속성의 값은
+                0 이상 100 이하의 짝수만 허용합니다.(at ${componentName})
             `);
         }
     }
 };
 
 Calc.propTypes = {
-    x: PropTypes.number.isRequired,
-    y: PropTypes.number.isRequired,
+    x: PropTypes.number,
+    y: calcChecker,
     oper: calcChecker
+};
+
+Calc.defaultProps = {
+    x: 100,
+    y: 20,
+    oper: "+"
 };
 
 export default Calc;
