@@ -1,17 +1,18 @@
-import React, { useState } from "react";
-import { TodoListItemType } from "../AppContainer";
+import React, { useState, useContext } from "react";
+import TodoContext from "../TodoContext";
 import TodoListItem from './TodoListItem';
 
-type TodoListProps = {
-    todoList: Array<TodoListItemType>;
-    toggleDone: (no: number) => void;
-    deleteTodo: (no: number) => void;
-};
+const TodoList = () => {
+    const value = useContext(TodoContext);
 
-const TodoList = (props: TodoListProps) => {
-    let items = props.todoList.map((item) => {
+    let items = value?.state.todoList.map((item) => {
         return (
-            <TodoListItem key={item.no} todoItem={item} deleteTodo={props.deleteTodo} toggleDone={props.toggleDone} />
+            <TodoListItem 
+                key={item.no} 
+                todoItem={item} 
+                deleteTodo={value?.actions.deleteTodo} 
+                toggleDone={value?.actions.toggleDone} 
+            />
         );
     });
 
