@@ -1,14 +1,19 @@
-import {BrowserRouter as Router, Routes, Route} from 'react-router-dom'
+import React from 'react';
+import {BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom'
 import { useState } from 'react'
 
 import Header from './components/Header'
-import Home from './pages/Home'
-import About from './pages/About'
-import SongList from './pages/SongList'
-import Members from './pages/Members'
-// import SongDetail from './pages/SongDetail'
-import Player from './pages/songs/Player'
-import Index from './pages/songs/Index'
+
+import pMinDelay from 'p-min-delay';
+import Loading from './components/Loading';
+
+const Home = React.lazy(() => pMinDelay(import('./pages/Home'), 1000));
+const About = React.lazy(() => pMinDelay(import('./pages/About'), 1000));
+const SongList = React.lazy(/* webpackChunkName:"songlist" */ () => pMinDelay(import('./pages/SongList'), 1000));
+const Members = React.lazy(() => pMinDelay(import('./pages/Members'), 1000));
+const Player = React.lazy(/* webpackChunkName:"player" */ () => pMinDelay(import('./pages/songs/Player'), 1000));
+const Index = React.lazy(/* webpackChunkName:"index" */ () => pMinDelay(import('./pages/songs/Index'), 1000));
+const NotFound = React.lazy(() => pMinDelay(import('./components/NotFound'), 1000));
 
 export type MemberType = {
   name: string;
@@ -44,20 +49,24 @@ const App = () => {
   ]);
 
   return (
-    <Router>
-      <div className='container'>
-        <Header />
-        <Routes>
-          <Route path='/' element={<Home />} />
-          <Route path='/about' element={<About title={'여우와 늙다리들'} />} />
-          <Route path='/members' element={<Members members={members} />} />
-          <Route path='/songs' element={<SongList songs={songs} />}>
-            <Route index element={<Index />} />
-            <Route path=':id' element={<Player />} />
-          </Route>
-        </Routes>
-      </div>
-    </Router>
+    <React.Suspense fallback={<Loading />}>
+      <Router>
+        <div className='container'>
+          <Header />
+          <Routes>
+            <Route path='/' element={<Navigate to="/home" />} />
+            <Route path='/home' element={<Home />} />
+            <Route path='/about' element={<About title={'여우와 늙다리들'} />} />
+            <Route path='/members' element={<Members members={members} />} />
+            <Route path='/songs' element={<SongList songs={songs} />}>
+              <Route index element={<Index />} />
+              <Route path=':id' element={<Player />} />
+            </Route>
+            <Route path='*' element={<NotFound />} />
+          </Routes>
+        </div>
+      </Router>
+    </React.Suspense>
   );
 };
 
