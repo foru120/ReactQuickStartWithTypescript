@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import App from './App';
 import produce from 'immer';
+import axios from 'axios';
 
 export type TodoItemType = {
     id: number;
@@ -12,49 +13,112 @@ export type StatesType = {
     todoList: Array<TodoItemType>
 };
 export type CallbacksType = {
-    addTodo: (todo: string, desc: string) => void;
+    addTodo: (todo: string, desc: string, callback: () => void) => void;
     deleteTodo: (id: number) => void;
     toggleDone: (id: number) => void;
-    updateTodo: (id: number, todo: string, desc: string, done: boolean) => void;
+    updateTodo: (id: number, todo: string, desc: string, done: boolean, callback: () => void) => void;
 };
 
+// 다른 사용자를 사용하려면 다음 경로로 요청하여 사용자 데이터를 생성
+// --> http://localhost:8000/todolist/[user명]/create
+const USER = "gdhong";
+const BASEURI = "/api/todolist/" + USER;
+
 const AppContainer = () => {
-    const [todoList, setTodoList] = useState<Array<TodoItemType>>([
-        { id: 1, todo: "ES6 학습", desc: "설명1", done: false},
-        { id: 2, todo: "React 학습", desc: "설명2", done: false},
-        { id: 3, todo: "ContextAPI 학습", desc: "설명3", done: false},
-        { id: 4, todo: "야구 경기 관람", desc: "설명4", done: false},
-    ]);
+    let [todoList, setTodoList] = useState<Array<TodoItemType>>([]);
 
-    const addTodo = (todo: string, desc: string) => {
-        let newTodoList = produce(todoList, (draft) => {
-            draft.push({id: new Date().getTime(), todo, desc, done: false});
-        });
-        setTodoList(newTodoList);
+    useEffect(() => {
+        fetchTodoList();
+    }, []);
+
+    const fetchTodoList = async () => {
+        setTodoList([]);
+
+        try {
+            const response = await axios.get(BASEURI);
+            setTodoList(response.data);
+        } catch (e) {
+            if (e instanceof Error) alert("조회 실패 :" + e.message);
+            else alert("조회 실패 :" + e);
+        }
     };
 
-    const deleteTodo = (id: number) => {
-        const index = todoList.findIndex((todo) => todo.id === id);
-        let newTodoList = produce(todoList, (draft) => {
-            draft.splice(index, 1);
-        });
-        setTodoList(newTodoList);
+    const addTodo = async (todo: string, desc: string, callback: () => void) => {
+        try {
+            const response = await axios.post(BASEURI, {todo, desc});
+
+            if (response.data.status === "success") {
+                let newTodoList = produce(todoList, (draft) => {
+                    draft.push({...response.data.item, done: false});
+                });
+                setTodoList(newTodoList);
+                callback();
+            } else {
+                alert("할 일 추가 실패:" + response.data.message);
+            }
+        } catch (e) {
+            if (e instanceof Error) alert("할 일 추가 실패:" + e.message);
+            else alert("할 일 추가 실패:" + e);
+        }
     };
 
-    const toggleDone = (id: number) => {
-        const index = todoList.findIndex((todo) => todo.id === id);
-        let newTodoList = produce(todoList, (draft) => {
-            draft[index].done = !draft[index].done;
-        });
-        setTodoList(newTodoList);
+    const deleteTodo = async (id: number) => {
+        try {
+            const response = await axios.delete(`${BASEURI}/${id}`);
+
+            if (response.data.status === "success") {
+                let index = todoList.findIndex((todo) => todo.id === id);
+                let newTodoList = produce(todoList, (draft) => {
+                    draft.splice(index, 1);
+                });
+                setTodoList(newTodoList);
+            } else {
+                alert("할 일 삭제 실패:" + response.data.message);
+            }
+        } catch (e) {
+            if (e instanceof Error) alert("할 일 삭제 실패:" + e.message);
+            else alert("할 일 삭제 실패:" + e);
+        }
     };
 
-    const updateTodo = (id: number, todo: string, desc: string, done: boolean) => {
-        const index = todoList.findIndex((todo) => todo.id === id);
-        let newTodoList = produce(todoList, (draft) => {
-            draft[index] = {...draft[index], todo, desc, done};
-        });
-        setTodoList(newTodoList);
+    const toggleDone = async (id: number) => {
+        try {
+            let todoItem = todoList.find((todo) => todo.id === id);
+            const response = await axios.put(`${BASEURI}/${id}`, {...todoItem, done: !todoItem?.done});
+
+            if (response.data.status === "success") {
+                let index = todoList.findIndex((todo) => todo.id === id);
+                let newTodoList = produce(todoList, (draft) => {
+                    draft[index].done = !draft[index].done;
+                });
+                setTodoList(newTodoList);
+            } else {
+                alert("완료 토글 실패 : " + response.data.message);
+            }
+        } catch (e) {
+            if (e instanceof Error) alert("완료 토글 실패:" + e.message);
+            else alert("완료 토글 실패:" + e);
+        }
+    };
+
+    const updateTodo = async (id: number, todo: string, desc: string, done: boolean, callback: () => void) => {
+        try {
+            const response = await axios.put(`${BASEURI}/${id}`, {todo, desc, done});
+
+            if (response.data.status === "success") {
+                let index = todoList.findIndex((todo) => todo.id === id);
+                let newTodoList = produce(todoList, (draft) => {
+                    draft[index] = {...draft[index], todo, desc, done};
+                });
+                setTodoList(newTodoList);
+                callback();
+            } else {
+                alert("할 일 수정 실패 : " + response.data.message);
+            }
+        } catch (e) {
+            if (e instanceof Error) alert("할 일 수정 실패 :" + e.message);
+            else alert("할 일 수정 실패 : " + e);
+        }
     };
 
     const callbacks: CallbacksType = {addTodo, deleteTodo, updateTodo, toggleDone};

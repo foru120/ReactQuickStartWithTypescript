@@ -18,8 +18,9 @@ const AddTodo = ({ callbacks }: Props) => {
             return;
         }
 
-        callbacks.addTodo(todo, desc);
-        navigate("/todos");
+        callbacks.addTodo(todo, desc, () => {
+            navigate("/todos");
+        });        
     };
 
     return (
