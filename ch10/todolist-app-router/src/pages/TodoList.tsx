@@ -19,6 +19,10 @@ const TodoList = ({ states, callbacks }: Props) => {
                     <Link className='btn btn-primary' to='/todos/add'>
                         할 일 추가
                     </Link>
+                    <button className='btn btn-primary ms-1'
+                        onClick={() => callbacks.fetchTodoList()}>
+                        할 일 목록 새로고침
+                    </button>
                 </div>
             </div>
             <div className='row'>

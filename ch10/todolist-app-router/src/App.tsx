@@ -7,6 +7,7 @@ import TodoList from './pages/TodoList';
 import AddTodo from './pages/AddTodo';
 import EditTodo from './pages/EditTodo';
 import NotFound from './pages/NotFound';
+import Loading from "./components/Loading";
 
 import { CallbacksType, StatesType } from "./AppContainer";
 
@@ -28,6 +29,7 @@ const App = ({states, callbacks}: Props) => {
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
+      {states.isLoading ? <Loading /> : ""}
     </Router>
   );
 };

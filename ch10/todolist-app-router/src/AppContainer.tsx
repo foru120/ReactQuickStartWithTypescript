@@ -10,9 +10,11 @@ export type TodoItemType = {
     done: boolean;
 };
 export type StatesType = {
-    todoList: Array<TodoItemType>
+    todoList: Array<TodoItemType>;
+    isLoading: boolean;
 };
 export type CallbacksType = {
+    fetchTodoList: () => void;
     addTodo: (todo: string, desc: string, callback: () => void) => void;
     deleteTodo: (id: number) => void;
     toggleDone: (id: number) => void;
@@ -22,10 +24,11 @@ export type CallbacksType = {
 // 다른 사용자를 사용하려면 다음 경로로 요청하여 사용자 데이터를 생성
 // --> http://localhost:8000/todolist/[user명]/create
 const USER = "gdhong";
-const BASEURI = "/api/todolist/" + USER;
+const BASEURI = "/api/todolist_long/" + USER;
 
 const AppContainer = () => {
     let [todoList, setTodoList] = useState<Array<TodoItemType>>([]);
+    let [isLoading, setIsLoading] = useState<boolean>(false);
 
     useEffect(() => {
         fetchTodoList();
@@ -33,6 +36,7 @@ const AppContainer = () => {
 
     const fetchTodoList = async () => {
         setTodoList([]);
+        setIsLoading(true);
 
         try {
             const response = await axios.get(BASEURI);
@@ -41,9 +45,11 @@ const AppContainer = () => {
             if (e instanceof Error) alert("조회 실패 :" + e.message);
             else alert("조회 실패 :" + e);
         }
+        setIsLoading(false);
     };
 
     const addTodo = async (todo: string, desc: string, callback: () => void) => {
+        setIsLoading(true);
         try {
             const response = await axios.post(BASEURI, {todo, desc});
 
@@ -60,6 +66,7 @@ const AppContainer = () => {
             if (e instanceof Error) alert("할 일 추가 실패:" + e.message);
             else alert("할 일 추가 실패:" + e);
         }
+        setIsLoading(false);
     };
 
     const deleteTodo = async (id: number) => {
@@ -121,8 +128,8 @@ const AppContainer = () => {
         }
     };
 
-    const callbacks: CallbacksType = {addTodo, deleteTodo, updateTodo, toggleDone};
-    const states: StatesType = {todoList};
+    const callbacks: CallbacksType = {fetchTodoList, addTodo, deleteTodo, updateTodo, toggleDone};
+    const states: StatesType = {todoList, isLoading};
 
     return <App callbacks={callbacks} states={states} />
 };
