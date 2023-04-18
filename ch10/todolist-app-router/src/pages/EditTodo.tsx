@@ -1,20 +1,24 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { CallbacksType, StatesType, TodoItemType } from '../AppContainer';
+import TodoActionCreator from '../redux/TodoActionCreator';
+import { connect } from 'react-redux';
+import { TodoStatesType, TodoItemType } from '../redux/TodoReducer';
+import { AnyAction, Dispatch } from '@reduxjs/toolkit';
+import { RootStatesType } from '../redux/AppStore';
 
 type Props = {
-    callbacks: CallbacksType;
-    states: StatesType;
+    updateTodo: (id: number, todo: string, desc: string, done: boolean) => void;
+    todoList: Array<TodoItemType>;
 };
 
 type TodoParam = {
     id?: string;
 };
 
-const EditTodo = ({ callbacks, states }: Props) => {
+const EditTodo = ({ todoList, updateTodo }: Props) => {
     const navigate = useNavigate();
     let { id } = useParams<TodoParam>();
-    let todoItem = states.todoList.find((item) => item.id === parseInt(id ? id : "0"));
+    let todoItem = todoList.find((item) => item.id === parseInt(id ? id : "0"));
     if (!todoItem) {
         navigate('/todos');
         return <></>;
@@ -28,9 +32,8 @@ const EditTodo = ({ callbacks, states }: Props) => {
             return;
         }
         let { id, todo, desc, done } = todoOne;
-        callbacks.updateTodo(id, todo, desc, done, () => {
-            navigate("/todos");
-        });        
+        updateTodo(id, todo, desc, done);        
+        navigate("/todos");
     };
 
     return (
@@ -76,4 +79,12 @@ const EditTodo = ({ callbacks, states }: Props) => {
     );
 };
 
-export default EditTodo;
+const mapStateToProps = (state: RootStatesType) => ({
+    todoList: state.todos.todoList
+});
+
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => ({
+    updateTodo: (id: number, todo: string, desc: string, done: boolean) => dispatch(TodoActionCreator.updateTodo({ id, todo, desc, done }))
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(EditTodo);

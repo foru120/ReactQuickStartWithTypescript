@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { CallbacksType } from '../AppContainer';
+import TodoActionCreator from '../redux/TodoActionCreator';
+import { connect } from 'react-redux';
+import { AnyAction, Dispatch } from '@reduxjs/toolkit';
 
 type Props = {
-    callbacks: CallbacksType;
+    addTodo: (todo: string, desc: string) => void;
 };
 
-const AddTodo = ({ callbacks }: Props) => {
+const AddTodo = ({ addTodo }: Props) => {
     const navigate = useNavigate();
 
     let [todo, setTodo] = useState<string>("");
@@ -18,9 +20,8 @@ const AddTodo = ({ callbacks }: Props) => {
             return;
         }
 
-        callbacks.addTodo(todo, desc, () => {
-            navigate("/todos");
-        });        
+        addTodo(todo, desc);
+        navigate("/todos");
     };
 
     return (
@@ -60,4 +61,8 @@ const AddTodo = ({ callbacks }: Props) => {
     );
 };
 
-export default AddTodo;
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => ({
+    addTodo: (todo: string, desc: string) => dispatch(TodoActionCreator.addTodo({ todo, desc }))
+})
+
+export default connect(null, mapDispatchToProps)(AddTodo);
